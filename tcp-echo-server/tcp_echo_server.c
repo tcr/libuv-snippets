@@ -15,27 +15,28 @@ uv_loop_t * loop;
 /**
  * Function declarations.
  */
-uv_buf_t alloc_buffer(uv_handle_t * handle, size_t size);
+void alloc_buffer(uv_handle_t * handle, size_t suggested_size, uv_buf_t *buf);
 void connection_cb(uv_stream_t * server, int status);
-void read_cb(uv_stream_t * stream, ssize_t nread, uv_buf_t buf);
+void read_cb(uv_stream_t * stream, ssize_t nread, const uv_buf_t *buf);
 
 int main() {
     loop = uv_default_loop();
     
     /* convert a humanreadable ip address to a c struct */
-    struct sockaddr_in addr = uv_ip4_addr("127.0.0.1", 3000);
+    struct sockaddr_in addr;
+    uv_ip4_addr("127.0.0.1", 3000, &addr);
 
     /* initialize the server */
     uv_tcp_init(loop, &server);
     /* bind the server to the address above */
-    uv_tcp_bind(&server, addr);
+    uv_tcp_bind(&server, (const struct sockaddr*) &addr);
     
     /* let the server listen on the address for new connections */
     int r = uv_listen((uv_stream_t *) &server, 128, connection_cb);
 
     if (r) {
         return fprintf(stderr, "Error on listening: %s.\n", 
-                uv_strerror(uv_last_error(loop)));
+                uv_strerror(r));
     }
 
     /* execute all tasks in queue */
@@ -50,9 +51,9 @@ void connection_cb(uv_stream_t * server, int status) {
     uv_tcp_t * client = malloc(sizeof(uv_tcp_t));
     
     /* if status not zero there was an error */
-    if (status == -1) {
+    if (status < 0) {
         fprintf(stderr, "Error on listening: %s.\n", 
-            uv_strerror(uv_last_error(loop)));
+            uv_strerror(status));
     }
 
     /* initialize the new client */
@@ -65,7 +66,7 @@ void connection_cb(uv_stream_t * server, int status) {
 
         if (r) {
             fprintf(stderr, "Error on reading client stream: %s.\n", 
-                    uv_strerror(uv_last_error(loop)));
+                    uv_strerror(r));
         }
     } else {
         /* close client stream on error */
@@ -76,35 +77,38 @@ void connection_cb(uv_stream_t * server, int status) {
 /**
  * Callback which is executed on each readable state.
  */
-void read_cb(uv_stream_t * stream, ssize_t nread, uv_buf_t buf) {
+void read_cb(uv_stream_t * stream, ssize_t nread, const uv_buf_t *buf) {
     /* dynamically allocate memory for a new write task */
     uv_write_t * req = (uv_write_t *) malloc(sizeof(uv_write_t));
     
     /* if read bytes counter -1 there is an error or EOF */
-    if (nread == -1) {
-        if (uv_last_error(loop).code != UV_EOF) {
+    if (nread < 0) {
+        if (nread != UV_EOF) {
             fprintf(stderr, "Error on reading client stream: %s.\n", 
-                    uv_strerror(uv_last_error(loop)));
+                    uv_strerror(nread));
         }
 
         uv_close((uv_handle_t *) stream, NULL);
     }
 
     /* write sync the incoming buffer to the socket */
-    int r = uv_write(req, stream, &buf, 1, NULL);
+    else {
+        uv_buf_t writebuf = { .base = buf->base, .len = nread }; 
+        int r = uv_write(req, stream, &writebuf, 1, NULL);
 
-    if (r) {
-        fprintf(stderr, "Error on writing client stream: %s.\n", 
-                uv_strerror(uv_last_error(loop)));
+        if (r) {
+            fprintf(stderr, "Error on writing client stream: %s.\n", 
+                    uv_strerror(r));
+        }
     }
 
     /* free the remaining memory */
-    free(buf.base);
+    free(buf->base);
 }
 
 /**
  * Allocates a buffer which we can use for reading.
  */
-uv_buf_t alloc_buffer(uv_handle_t * handle, size_t size) {
-        return uv_buf_init((char *) malloc(size), size);
+void alloc_buffer(uv_handle_t * handle, size_t size, uv_buf_t *buf) {
+    *buf = uv_buf_init((char *) malloc(size), size);
 }

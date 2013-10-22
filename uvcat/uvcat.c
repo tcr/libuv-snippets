@@ -47,7 +47,7 @@ int main(int argc, const char ** argv) {
     /* handle error */
     if (r) {
         fprintf(stderr, "Error on opening file: %s\n.", 
-                uv_strerror(uv_last_error(loop)));
+                uv_strerror(r));
     }
 
     /* start executing all queued tasks */
@@ -60,9 +60,9 @@ int main(int argc, const char ** argv) {
 void open_cb(uv_fs_t * req) {
     int result = req->result;
 
-    if (result == -1) {
+    if (result < 0) {
         fprintf(stderr, "Error on opening file: %s\n.", 
-                uv_strerror(uv_last_error(loop)));
+                uv_strerror(result));
     }
 
     /* free memory of our request */
@@ -74,7 +74,7 @@ void open_cb(uv_fs_t * req) {
 
     if (r) {
         fprintf(stderr, "Error on reading file: %s\n.", 
-                uv_strerror(uv_last_error(loop)));
+                uv_strerror(r));
     }
 }
 
@@ -84,9 +84,9 @@ void open_cb(uv_fs_t * req) {
 void read_cb(uv_fs_t * req) {
     int result = req->result;
 
-    if (result == -1) {
+    if (result < 0) {
         fprintf(stderr, "Error on reading file: %s\n.", 
-                uv_strerror(uv_last_error(loop)));
+                uv_strerror(result));
     }
 
     uv_fs_req_cleanup(req);
@@ -94,9 +94,9 @@ void read_cb(uv_fs_t * req) {
     /* now close the file properly */
     int r = uv_fs_close(loop, &close_req, open_req.result, close_cb);
 
-    if (result == -1) {
+    if (result < 0) {
         fprintf(stderr, "Error on closing file: %s\n.", 
-                uv_strerror(uv_last_error(loop)));
+                uv_strerror(result));
     }
 }
 
@@ -106,9 +106,9 @@ void read_cb(uv_fs_t * req) {
 void close_cb(uv_fs_t * req) {
     int result = req->result;
 
-    if (result == -1) {
+    if (result < 0) {
         fprintf(stderr, "Error on closing file: %s\n.", 
-                uv_strerror(uv_last_error(loop)));
+                uv_strerror(result));
     }
 
     uv_fs_req_cleanup(req);

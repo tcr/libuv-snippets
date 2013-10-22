@@ -13,7 +13,6 @@ Install a global copy of the uv library with homebrew:
 
 ```
 brew install libuv
-
 ```
 
 to compile the specific file just change to its dir and run ```make```.

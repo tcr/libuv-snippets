@@ -1,18 +1,15 @@
 # libuv-snippets
 
-some libuv code snippets written while learning c and libuv.
+Some libuv code snippets. If you are interested on internals of libuv, checkout [bodokaiser's libuv internals](http://github.com/bodokaiser/libuv-internals).
 
-If you are interested on internals of libuv. 
-Checkout [libuv internals](http://github.com/bodokaiser/libuv-internals).
-
-## Ressources
+## Resources
 
 * [uvbook](http://nikhilm.github.com/uvbook)
 * [libuv header](http://github.com/joyent/libuv/blob/master/include/uv.h)
 
-## Installation
+## Installation on OSX
 
-I use a global copy of the uv library installed with homebrew:
+Install a global copy of the uv library with homebrew:
 
 ```
 brew install libuv
@@ -23,7 +20,7 @@ to compile the specific file just change to its dir and run ```make```.
 
 ## License
 
-Copyright © 2013 Bodo Kaiser <bodo.rene.kaiser@googlemail.com>
+Copyright © 2013 Tim Ryan <tim@timryan.org>, Bodo Kaiser <bodo.rene.kaiser@googlemail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
